@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+	console.log("Js executing")
     // Tech Diwali jokes array
     const jokes = [
         "Why don't programmers light diyas anymore? They prefer to use Firebase!",
@@ -17,8 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const jokeElement = document.getElementById('joke');
     const nextJokeButton = document.getElementById('next-joke');
     let currentJokeIndex = 0;
-    
+    console.log(nextJokeButton);
     nextJokeButton.addEventListener('click', function() {
+		console.log("Clicked")
         currentJokeIndex = (currentJokeIndex + 1) % jokes.length;
         jokeElement.textContent = jokes[currentJokeIndex];
         // Add a small animation
@@ -28,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
             jokeElement.style.opacity = 1;
         }, 300);
     });
-    
     // Create dynamic stars
     const stars = document.querySelector('.stars');
     for (let i = 0; i < 50; i++) {
