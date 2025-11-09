@@ -1,88 +1,186 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Diwali Celebration</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <title>Download File (Legal Use Only)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:#f6f8fb;color:#0b1226;padding:24px}
+    .card{max-width:760px;margin:18px auto;padding:20px;background:#fff;border-radius:10px;box-shadow:0 6px 20px rgba(11,17,38,0.06)}
+    h1{margin:0 0 8px;font-size:20px}
+    label{display:block;margin-top:12px;font-size:13px;color:#374151}
+    input[type=text]{width:100%;padding:10px;border-radius:6px;border:1px solid #e6e9ef;margin-top:6px}
+    button{margin-top:14px;padding:10px 14px;border-radius:8px;border:0;background:#0b78ff;color:white;font-weight:600;cursor:pointer}
+    button[disabled]{opacity:.5;cursor:not-allowed}
+    progress{width:100%;margin-top:12px;height:14px}
+    .note{font-size:13px;color:#6b7280;margin-top:12px}
+    pre{background:#f3f4f6;padding:10px;border-radius:6px;overflow:auto}
+  </style>
 </head>
 <body>
-    <div class="stars"></div>
-    <div class="twinkling"></div>
-    
-    <div class="container">
-        <header>
-            <h1 class="glow">Tech Diwali <span class="year">2025</span></h1>
-            <p class="tagline">Where Silicon Meets Celebration</p>
-        </header>
-        
-        <div class="lamp-row">
-            <div class="diya">
-                <div class="flame"></div>
-                <div class="base"></div>
-            </div>
-            <div class="diya">
-                <div class="flame"></div>
-                <div class="base"></div>
-            </div>
-            <div class="diya">
-                <div class="flame"></div>
-                <div class="base"></div>
-            </div>
-        </div>
-        
-        <div class="greeting-card">
-            <div class="card-inner">
-                <div class="card-front">
-                    <div class="circuit-pattern"></div>
-                    <h2>Hover to open</h2>
-                </div>
-                <div class="card-back">
-                    <div class="message">
-                        <h2>Happy Diwali!</h2>
-                        <p>May your code be bug-free and your deployments smooth</p>
-                        <div class="joke-box">
-                            <p id="joke">Why don't programmers light diyas anymore? They prefer to use Firebase!</p>
-                            <button id="next-joke">Next Joke</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="terminal">
-            <div class="terminal-header">
-                <span class="terminal-button"></span>
-                <span class="terminal-button"></span>
-                <span class="terminal-button"></span>
-                <span class="terminal-title">ai-diwali.sh</span>
-            </div>
-            <div class="terminal-body">
-                <p class="command">$ <span class="typing">celebrate --mode=diwali --tech</span></p>
-                <p class="response">Initializing celebrations...</p>
-                <p class="response">Loading festive algorithms...</p>
-                <p class="response">Optimizing lamp arrangements...</p>
-                <p class="response success">Successfully deployed Diwali 2025! Enjoy the festival of lights and code!</p>
-            </div>
-        </div>
-        
-        <div class="rangoli-container">
-            <div class="rangoli"></div>
-        </div>
-        
-        <div class="fireworks">
-            <div class="firework"></div>
-            <div class="firework"></div>
-            <div class="firework"></div>
-        </div>
-        
-        <footer>
-            <p>Created with <span class="heart">Love</span> by Mahi Ghuge</p>
-            <p class="copyright">#Diwali2025</p>
-        </footer>
+  <div class="card">
+    <h1>File Downloader (Use only for files you own / are authorized to download)</h1>
+    <div class="note">
+      <strong>Important:</strong> This tool downloads a direct file URL. Do NOT use to download copyrighted content without permission. CORS must allow the browser to fetch the URL.
     </div>
-    
-    <script src="script.js"></script>
+
+    <label for="url">Direct file URL (example: https://example.com/video.mp4)</label>
+    <input id="url" type="text" placeholder="Paste direct file URL here">
+
+    <label for="fname">Save as (filename)</label>
+    <input id="fname" type="text" placeholder="my-video.mp4">
+
+    <label for="headers">Optional request headers (JSON) — for authenticated / special endpoints</label>
+    <input id="headers" type="text" placeholder='{"Authorization":"Bearer TOKEN"}'>
+
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button id="start">Download</button>
+      <button id="cancel" disabled style="background:#ef4444">Cancel</button>
+    </div>
+
+    <progress id="prog" value="0" max="100" style="display:none"></progress>
+    <div id="status" class="note"></div>
+
+    <h3 style="margin-top:18px">Debug / Response info</h3>
+    <pre id="info">{ }</pre>
+  </div>
+
+<script>
+(async function(){
+  const startBtn = document.getElementById('start');
+  const cancelBtn = document.getElementById('cancel');
+  const urlEl = document.getElementById('url');
+  const fnameEl = document.getElementById('fname');
+  const headersEl = document.getElementById('headers');
+  const prog = document.getElementById('prog');
+  const status = document.getElementById('status');
+  const info = document.getElementById('info');
+
+  let controller = null;
+
+  function setStatus(msg, err=false){
+    status.textContent = msg;
+    status.style.color = err ? '#b91c1c' : '#374151';
+  }
+
+  function updateInfo(obj){
+    try { info.textContent = JSON.stringify(obj, null, 2); }
+    catch(e){ info.textContent = String(obj); }
+  }
+
+  cancelBtn.addEventListener('click', () => {
+    if (controller) {
+      controller.abort();
+      setStatus('Download cancelled by user.', true);
+      cancelBtn.disabled = true;
+      startBtn.disabled = false;
+      prog.style.display = 'none';
+    }
+  });
+
+  startBtn.addEventListener('click', async () => {
+    const url = urlEl.value.trim();
+    let filename = fnameEl.value.trim() || '';
+    const headersText = headersEl.value.trim();
+
+    if (!url) { setStatus('Please enter a direct file URL.', true); return; }
+    // filename fallback from URL:
+    if (!filename) {
+      try {
+        filename = (new URL(url)).pathname.split('/').filter(Boolean).pop() || 'download.bin';
+      } catch(e){ filename = 'download.bin'; }
+      fnameEl.value = filename;
+    }
+
+    let customHeaders = {};
+    if (headersText) {
+      try { customHeaders = JSON.parse(headersText); }
+      catch(e){ setStatus('Headers must be valid JSON.', true); return; }
+    }
+
+    startBtn.disabled = true;
+    cancelBtn.disabled = false;
+    prog.value = 0; prog.style.display = 'block';
+    setStatus('Starting download...');
+
+    controller = new AbortController();
+    const signal = controller.signal;
+
+    try {
+      // Fetch with streaming
+      const resp = await fetch(url, { method: 'GET', headers: customHeaders, signal });
+      updateInfo({
+        status: resp.status,
+        statusText: resp.statusText,
+        contentType: resp.headers.get('content-type'),
+        contentLength: resp.headers.get('content-length')
+      });
+
+      if (!resp.ok) throw new Error('HTTP error: ' + resp.status);
+
+      const contentLength = resp.headers.get('content-length');
+      const total = contentLength ? parseInt(contentLength, 10) : NaN;
+
+      const reader = resp.body && resp.body.getReader();
+      if (!reader) throw new Error('ReadableStream not supported or response has no body. (CORS or server issue)');
+
+      const chunks = [];
+      let received = 0;
+      setStatus('Downloading...');
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        received += value.length || value.byteLength || value.byteLength === 0 ? value.byteLength : value.length;
+        if (!isNaN(total)) {
+          prog.value = Math.round((received / total) * 100);
+        } else {
+          // indeterminate progress: animate slight growth
+          prog.value = (prog.value + 2) % 99;
+        }
+      }
+
+      setStatus('Finalizing file...');
+      // concatenate Uint8Arrays
+      let size = chunks.reduce((sum, c) => sum + c.length, 0);
+      const tmp = new Uint8Array(size);
+      let offset = 0;
+      for (const c of chunks) {
+        tmp.set(c, offset);
+        offset += c.length;
+      }
+
+      const blob = new Blob([tmp], { type: resp.headers.get('content-type') || 'application/octet-stream' });
+      const objectUrl = URL.createObjectURL(blob);
+
+      // create anchor to download
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      // free memory
+      setTimeout(()=> URL.revokeObjectURL(objectUrl), 30000);
+      setStatus('Download completed ✅');
+      prog.value = 100;
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        setStatus('Download aborted.', true);
+      } else {
+        // Common errors: CORS, 403/401, network
+        setStatus('Error: ' + (err.message || err), true);
+        updateInfo({ error: String(err) });
+      }
+    } finally {
+      startBtn.disabled = false;
+      cancelBtn.disabled = true;
+      controller = null;
+    }
+  });
+})();
+</script>
 </body>
 </html>
-
